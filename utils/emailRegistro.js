@@ -5,11 +5,11 @@ const emailRegistro = async (datos) => {
   const {email, nombre, token} = datos;
   
   const transporter = nodemailer.createTransport({
-    host: "smtp.mailtrap.io",
-    port: 2525,
+    host: process.env.MAIL_HOST || 'localhost',
+    port: process.env.MAIL_PORT || 1025,
     auth: {
-      user: "b919cf689492b3",
-      pass: "b2d3fef15e4b8b"
+        user: process.env.MAIL_USER || 'project.1',
+        pass: process.env.MAIL_PASS || 'secret.1'
     }
   });
 

@@ -3,7 +3,7 @@ import Veterinario from "../models/Veterinario.js"
 import generarJWT from "../utils/generarJWT.js";
 import generarId from "../utils/generarId.js";
 import emailRegistro from "../utils/emailRegistro.js";
-
+import emailRecuperarPassword from "../utils/emailRecuperarPassword.js";
 
 const registrar = async (req, res) => {
 
@@ -93,6 +93,7 @@ const olvidePassword = async (req, res, next) => {
 
     usuarioVeterinario.token = generarId();
     await usuarioVeterinario.save();
+    emailRecuperarPassword({email, token: usuarioVeterinario.token})
     res.json({msg: `te hemos enviado un correo`})
 }
 
@@ -135,6 +136,62 @@ const nuevoPassword = async (req, res, next) => {
 }
 
 
+const cambiarPassword = async (req, res) => {
+    const { id } = req.params
+    const { password } =  req.body;
+
+    const veterinario = await Veterinario.findById(id);
+
+    if(!veterinario){
+        const error = new Error('Hubo un error');
+        return res.status(400).json({ msg: error.message })
+    }
+
+    try {
+        veterinario.password = password;
+        await veterinario.save();
+        res.json({msg: 'password cambiado'})
+    } catch (error) {
+        const e = new Error('No se pudo cambiar la contraseña');
+        return res.status(400).json({ msg: e.message })
+    }
+
+}
+
+const actualizarDatos = async (req, res) => {
+    const { id } = req.params;
+    const { nombre, email, telefono, web } = req.body
+
+    const veterinarioActualizado = await Veterinario.findById(id);
+
+    if(!veterinarioActualizado){
+        const error = new Error('Hubo un error');
+        return res.status(400).json({ msg: error.message })
+    }
+
+    if(veterinarioActualizado.email !== email){
+        const nuevoEmail = await Veterinario.findOne({ email });
+        if(nuevoEmail){
+            const error = new Error('correo en uso');
+            return res.status(400).json({ msg: error.message })
+        }
+    }
+
+    try {
+        veterinarioActualizado.nombre = nombre;
+        veterinarioActualizado.email = email;
+        veterinarioActualizado.telefono = telefono;
+        veterinarioActualizado.web = web;
+        await veterinarioActualizado.save();
+        res.json({msg: 'Usuario actualiado con exito'})
+    } catch (error) {
+        const e = new Error('No se pudo actualizar el usuario');
+        return res.status(400).json({ msg: e.message })
+    }
+
+}
+
+
 
 export {
     registrar,
@@ -143,5 +200,7 @@ export {
     autenticar,
     olvidePassword,
     comprobarToken,
-    nuevoPassword
+    nuevoPassword,
+    cambiarPassword,
+    actualizarDatos
 }
